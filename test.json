@@ -1,0 +1,169 @@
+{
+"builtin_class_sizes": [
+		{
+			"build_configuration": "float_32",
+			"sizes": [
+				{
+					"name": "Nil",
+					"size": 0
+				},
+				{
+					"name": "bool",
+					"size": 1
+				},
+				{
+					"name": "int",
+					"size": 8
+				},
+				{
+					"name": "float",
+					"size": 8
+				},
+				{
+					"name": "String",
+					"size": 4
+				},
+				{
+					"name": "Vector2",
+					"size": 8
+				},
+				{
+					"name": "Vector2i",
+					"size": 8
+				},
+				{
+					"name": "Rect2",
+					"size": 16
+				},
+				{
+					"name": "Rect2i",
+					"size": 16
+				},
+				{
+					"name": "Vector3",
+					"size": 12
+				},
+				{
+					"name": "Vector3i",
+					"size": 12
+				},
+				{
+					"name": "Transform2D",
+					"size": 24
+				},
+				{
+					"name": "Vector4",
+					"size": 16
+				},
+				{
+					"name": "Vector4i",
+					"size": 16
+				},
+				{
+					"name": "Plane",
+					"size": 16
+				},
+				{
+					"name": "Quaternion",
+					"size": 16
+				},
+				{
+					"name": "AABB",
+					"size": 24
+				},
+				{
+					"name": "Basis",
+					"size": 36
+				},
+				{
+					"name": "Transform3D",
+					"size": 48
+				},
+				{
+					"name": "Projection",
+					"size": 64
+				},
+				{
+					"name": "Color",
+					"size": 16
+				},
+				{
+					"name": "StringName",
+					"size": 4
+				},
+				{
+					"name": "NodePath",
+					"size": 4
+				},
+				{
+					"name": "RID",
+					"size": 8
+				},
+				{
+					"name": "Object",
+					"size": 4
+				},
+				{
+					"name": "Callable",
+					"size": 16
+				},
+				{
+					"name": "Signal",
+					"size": 16
+				},
+				{
+					"name": "Dictionary",
+					"size": 4
+				},
+				{
+					"name": "Array",
+					"size": 4
+				},
+				{
+					"name": "PackedByteArray",
+					"size": 8
+				},
+				{
+					"name": "PackedInt32Array",
+					"size": 8
+				},
+				{
+					"name": "PackedInt64Array",
+					"size": 8
+				},
+				{
+					"name": "PackedFloat32Array",
+					"size": 8
+				},
+				{
+					"name": "PackedFloat64Array",
+					"size": 8
+				},
+				{
+					"name": "PackedStringArray",
+					"size": 8
+				},
+				{
+					"name": "PackedVector2Array",
+					"size": 8
+				},
+				{
+					"name": "PackedVector3Array",
+					"size": 8
+				},
+				{
+					"name": "PackedColorArray",
+					"size": 8
+				},
+				{
+					"name": "PackedVector4Array",
+					"size": 8
+				},
+				{
+					"name": "Variant",
+					"size": 24
+				}
+			]
+		}
+    ]
+}
