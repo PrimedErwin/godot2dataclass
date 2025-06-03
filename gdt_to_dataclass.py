@@ -183,9 +183,9 @@ class ClassesMethodArgument:
 class ClassesMethod:
     name: str
     is_const: bool
+    is_vararg: bool
     is_static: bool
     is_required: bool | None
-    is_vararg: bool
     is_virtual: bool
     hash: int
     hash_compatibility: list[int] | None = field(default_factory=list)
