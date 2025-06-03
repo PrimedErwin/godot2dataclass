@@ -112,6 +112,7 @@ class BuiltinClassEnum:
 class BuiltinClassMehodArgument:
     name: str
     type: str
+    default_value: str | None
     
 @dataclass
 class BuiltinClassMethod:
@@ -138,13 +139,13 @@ class BuiltinClass:
     name: str
     indexing_return_type: str | None
     is_keyed: bool
-    has_destructor: bool
     members: list[BuiltinClassMember] | None = field(default_factory=list)
     constants: list[BuiltinClassConstant] | None = field(default_factory=list)
     enums: list[BuiltinClassEnum] | None = field(default_factory=list)
     operators: list[BuiltinClassOperator] = field(default_factory=list)
     methods: list[BuiltinClassMethod] | None = field(default_factory=list)
     constructors: list[BuiltinClassConstructor] = field(default_factory=list)
+    has_destructor: bool = field(default=False)
     
 @dataclass
 class BuiltinClasses:
@@ -162,6 +163,11 @@ class ClassesEnum:
     values: list[ClassesEnumValue] | None = field(default_factory=list)
     
 @dataclass
+class ClassesConstant:
+    name: str
+    value: int
+    
+@dataclass
 class ClassesMethodReturnValue:
     type: str
     meta: str | None
@@ -171,6 +177,7 @@ class ClassesMethodArgument:
     name: str
     type: str
     meta: str | None
+    default_value: str | None
     
 @dataclass
 class ClassesMethod:
@@ -182,8 +189,8 @@ class ClassesMethod:
     is_virtual: bool
     hash: int
     hash_compatibility: list[int] | None = field(default_factory=list)
+    return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
     arguments: list[ClassesMethodArgument] | None = field(default_factory=list)
-    return_value: list[ClassesMethodReturnValue] | None = field(default_factory=list)
 
 @dataclass
 class ClassesSignalArgument:
@@ -201,6 +208,7 @@ class ClassesProperty:
     name: str
     setter: str | None
     getter: str | None
+    index: str | None
     
 @dataclass
 class ClassesSingle:
@@ -209,6 +217,7 @@ class ClassesSingle:
     is_instantiable: bool
     inherits: str | None
     api_type: str
+    constants: list[ClassesConstant] | None = field(default_factory=list)
     enums: list[ClassesEnum] | None = field(default_factory=list)
     methods: list[ClassesMethod] | None = field(default_factory=list)
     signals: list[ClassesSignal] | None = field(default_factory=list)
@@ -363,7 +372,8 @@ def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
         builtin_methods = []
         for builtin_method in builtin_class.get('methods', []):
             method_arguments = [BuiltinClassMehodArgument(name=arg['name'],
-                                                          type=arg['type'])
+                                                          type=arg['type'],
+                                                          default_value=arg.get('default_value'))
                                 for arg in builtin_method.get('arguments', [])]
             if not method_arguments:
                 method_arguments = None
@@ -375,6 +385,8 @@ def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
                                         hash=builtin_method['hash'],
                                         arguments=method_arguments)
             builtin_methods.append(method)
+        if not builtin_methods:
+            builtin_methods = None
         builtin_classes.append(BuiltinClass(name=builtin_class['name'],
                                             is_keyed=builtin_class['is_keyed'],
                                             indexing_return_type=builtin_class.get('indexing_return_type'),
@@ -404,17 +416,25 @@ def parse_classes(json_data: dict) -> Classes:
             classes_enums.append(enum)
         if not classes_enums:
             classes_enums = None
+        classes_constants = []
+        constant_list = classes_single.get('constants', [])
+        classes_constants = [ClassesConstant(name=constant['name'],
+                                             value=constant['value'])
+                             for constant in constant_list]
+        if not classes_constants:
+            classes_constants = None
         classes_methods = []
         for classes_method in classes_single.get('methods', []):
             return_values = classes_method.get('return_value', [])
             return_value = None
             if return_values:
-                return_value = [ClassesMethodReturnValue(type=return_values.get('type'),
-                                                        meta=return_values.get('meta'))]
+                return_value = ClassesMethodReturnValue(type=return_values.get('type'),
+                                                        meta=return_values.get('meta'))
             arg_list = classes_method.get('arguments', [])
             arguments = [ClassesMethodArgument(name=arg['name'],
                                               type=arg['type'],
-                                              meta=arg.get('meta'))
+                                              meta=arg.get('meta'),
+                                              default_value=arg.get('default_value'))
                         for arg in arg_list]
             if not arguments:
                 arguments = None
@@ -447,7 +467,8 @@ def parse_classes(json_data: dict) -> Classes:
         classes_properties = [ClassesProperty(type=arg['type'],
                                               name=arg['name'],
                                               setter=arg.get('setter'),
-                                              getter=arg.get('getter'))
+                                              getter=arg.get('getter'),
+                                              index=arg.get('index'))
                               for arg in classes_single.get('properties', [])]
         if not classes_properties:
             classes_properties = None
@@ -457,6 +478,7 @@ def parse_classes(json_data: dict) -> Classes:
                                      inherits=classes_single.get('inherits'),
                                      api_type=classes_single['api_type'],
                                      enums=classes_enums,
+                                     constants=classes_constants,
                                      methods=classes_methods,
                                      signals=classes_signals,
                                      properties=classes_properties))
@@ -510,5 +532,5 @@ if __name__ == '__main__':
     cleared_none = remove_none_values(asdict(all_in_one))
     with open('output.json', 'w', encoding='utf-8') as fp:
         json.dump(cleared_none, fp, indent='\t')
-    
+        fp.write('\n')
     exit()
