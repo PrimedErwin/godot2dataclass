@@ -530,7 +530,6 @@ if __name__ == '__main__':
                             singletons=result_singletons.singletons,
                             native_structures=result_native_structures.native_structures)
     cleared_none = remove_none_values(asdict(all_in_one))
-    with open('output.json', 'w', encoding='utf-8') as fp:
+    with open('output.json', 'w', encoding='utf-8', newline='') as fp:
         json.dump(cleared_none, fp, indent='\t')
         fp.write('\n')
-    exit()
