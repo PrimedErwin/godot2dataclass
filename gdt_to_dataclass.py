@@ -1,6 +1,27 @@
 from dataclasses import dataclass, field, asdict
 import json
+# This is a script of converting godot extension api into dataclass.
+# In this file, @dataclass is used to storage the info. The 
+# corresponding source code is linked with a permalink before 
+# each dataclass.
+# How does godot's source code work:
+# A "Dictionary" class is used. A empty dictionary, for example, 
+# `Dictionary header`, set the "version_major" by 
+# `header["version_major"] = 4`, the output of header will be
+# "header": {"version_major": 4}. Subsequently added attributes
+#  will be arranged in order. So "version_minor" is always behind 
+# the "version_major".
+# A "Array" class is used. Array contains "Dictionary" classes. 
+# For example, in "builtin_class_sizes", "sizes" has output:
+# "sizes: [{dict1}, {dict2}, ...]", the "Array sizes" contains 
+# dict1, dict2, ...
+# Dict may contains Array. 
+# With the above 2 classes, godot outputs json following the source 
+# code's logic. 
 
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L106
+# Header is defined here, but L120-L124 has a key "precision" added,
+# so "precision" is also added here
 @dataclass
 class Header:
     version_major: int
@@ -9,65 +30,106 @@ class Header:
     version_status: str
     version_build: str
     version_full_name: str
-    
+    precision: str
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L254
+# dict in "sizes"    
+# It's storaged in `Dictionary d2`, each d2 has "name" and "size" attributes
 @dataclass
 class TypeSize:
     name: str
     size: int
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L249
+# build_configuration, and array of type sizes
+# There are 4 kinds of "build_configuration" for "builtin_class_sizes"
 @dataclass
 class TypeBuildConfiguration:
     build_configuration: str
     sizes: list[TypeSize] = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L277
+# core_type_sizes
+# creating an Array containing all "build_configuration" and their sizes    
 @dataclass
 class BuiltinClassSizes:
     builtin_class_sizes: list[TypeBuildConfiguration] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L449
+# member and their offset properties
+# `Dictionary d3` containing these info is part of `Array members`
 @dataclass
 class MemberOffset:
     member: str
     offset: int
     meta: str
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L444
+# `Array members`, and class name
+# the array that contains `Dictionary d3` with members' info, the name indicates 
+# the class, for example, `vector2` under float_32 configuration, has 2 members 
+# `x` and `y` in the array, and `y` is after `x`, making y's offset is 
+# 1 float_32(4 bytes).
 @dataclass
 class ClassMember:
     name: str
     members: list[MemberOffset] = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L420
+# build_configuration, and all the classes under this configuration
+# the classes are arrays containing name, member offset info
 @dataclass
 class OffsetBuildConfiguration:
     build_configuration: str
     classes: list[ClassMember] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L478
+# core_type_member_offsets
+# an array with all build_configurations and their classes
 @dataclass
 class BuiltinClassMemberOffsets:
     builtin_class_member_offsets: list[OffsetBuildConfiguration] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L508
+# global constant's info
+# L505,L506 shows that the code block processes global enums and 
+# constants together. If one has enum name, it will be in the "global_enums"
+@dataclass
+class GlobalConstant:
+    name: str
+    value: int
+    is_bitfield: bool
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L520
+# constants
+# array of global constants
 @dataclass
 class GlobalConstants:
-    global_constants: list = field(default_factory=list)
-
+    global_constants: list[GlobalConstant] = field(default_factory=list)
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L539
+# name and value of enum values
+# for example, "Side" has "top, bottom, left, right", properties 
+# here indicates the value of "SIDE_TOP", ...
 @dataclass
 class EnumValues:
     name: str
     value: int
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L528
+# name and other properties of an enum
+# values contains the exact values of the current enum
 @dataclass
 class GlobalEnum:
     name: str
     is_bitfield: bool
     values: list[EnumValues] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L553
+# enums
+# an array contains all the enums
 @dataclass
 class GlobalEnums:
     global_enums: list[GlobalEnum] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L594
+# argument name and its type
+# 
 @dataclass
 class UtilityArguments:
     name: str
     type: str
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L571
+# function's properties
+# include basic properties of a functin. Array arguments contains 
+# the arguments it needs.    
 @dataclass
 class UtilityFunction:
     name: str
@@ -76,44 +138,60 @@ class UtilityFunction:
     is_vararg: bool
     hash: int
     arguments: list[UtilityArguments] | None = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L615
+# utility_funs
+# contains all the utility functions    
 @dataclass
 class UtilityFunctions:
     utility_functions: list[UtilityFunction] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L754
+# operator of the class
+# contains basic info of the operator
 @dataclass
 class BuiltinClassOperator:
     name: str
     right_type: str
     return_type: bool
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L654
+# a member of the class    
+# contains basic info of the member
 @dataclass
 class BuiltinClassMember:
     name: str
     type: str
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L678
+# a constant of the class
+# contains basic info of the constant    
 @dataclass
 class BuiltinClassConstant:
     name: str
     type: str
     value: str
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L713
+# name and value of enum values
+#    
 @dataclass
 class BuiltinClassEnumValue:
     name: str
     value: int
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L704
+# name and other properties of an enum
+#     
 @dataclass
 class BuiltinClassEnum:
     name: str
     values: list[BuiltinClassEnumValue] | None= field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L805
+# argument's name, type, (perhaps with a default value) of the method
+#     
 @dataclass
 class BuiltinClassMehodArgument:
     name: str
     type: str
     default_value: str | None
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L789
+# a method for the builtin class
+# contains properties of the method    
 @dataclass
 class BuiltinClassMethod:
     name: str
@@ -123,17 +201,23 @@ class BuiltinClassMethod:
     is_static: bool
     hash: int
     arguments: list[BuiltinClassMehodArgument] | None = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L846
+# argument of the constructor
+#     
 @dataclass
 class BuiltinClassConstructorArgument:
     name: str
     type: str
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L840
+# a constructor of the builtin class
+# contains properties of the constructor    
 @dataclass
 class BuiltinClassConstructor:
     index: int
     arguments: list[BuiltinClassConstructorArgument] | None = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L633
+# a class's basic properties
+#     
 @dataclass
 class BuiltinClass:
     name: str
@@ -146,7 +230,9 @@ class BuiltinClass:
     methods: list[BuiltinClassMethod] | None = field(default_factory=list)
     constructors: list[BuiltinClassConstructor] = field(default_factory=list)
     has_destructor: bool = field(default=False)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L893
+# builtins
+# contains all the builtin classes    
 @dataclass
 class BuiltinClasses:
     builtin_classes: list[BuiltinClass] = field(default_factory=list)
@@ -161,12 +247,12 @@ class ClassesEnum:
     name: str
     is_bitfield: bool
     values: list[ClassesEnumValue] | None = field(default_factory=list)
-    
+   
 @dataclass
 class ClassesConstant:
     name: str
     value: int
-    
+
 @dataclass
 class ClassesMethodReturnValue:
     type: str
@@ -226,21 +312,28 @@ class ClassesSingle:
 @dataclass
 class Classes:
     classes: list[ClassesSingle] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1280
+# singleton's name and type
+# 
 @dataclass
 class Singleton:
     name: str
     type: str
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1287
+# an array contains singletons
+# 
 @dataclass
 class Singletons:
     singletons: list[Singleton] = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1305
+# native structure's name and format
+#     
 @dataclass
 class NativeStructure:
     name: str
     format: str
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1309
+# an array contains native structures    
 @dataclass
 class NativeStructures:
     native_structures: list[NativeStructure] = field(default_factory=list)
@@ -297,6 +390,14 @@ def parse_builtin_class_member_offsets(json_data: dict) -> BuiltinClassMemberOff
         build_configurations.append(OffsetBuildConfiguration(build_configuration=config['build_configuration'],
                                                              classes=config_classes))
     return BuiltinClassMemberOffsets(builtin_class_member_offsets=build_configurations)
+
+def parse_global_constants(json_data: dict) -> GlobalConstants:
+    constants = []
+    for constant in json_data.get('global_constants', []):
+        constants.append(GlobalConstant(name=constant['name'],
+                                        value=constant['value'],
+                                        is_bitfield=constant['is_bitfield']))
+    return GlobalConstants(global_constants=constants)
             
 def parse_global_enums(json_data: dict) -> GlobalEnums:
     enums = []
@@ -509,10 +610,11 @@ if __name__ == '__main__':
                         json_data['header'].get('version_patch'),
                         json_data['header'].get('version_status'),
                         json_data['header'].get('version_build'),
-                        json_data['header'].get('version_full_name'))
+                        json_data['header'].get('version_full_name'),
+                        json_data['header'].get('precision'))
     result_builtin_class_sizes = parse_builtin_class_sizes(json_data)
     result_builtin_class_member_offsets = parse_builtin_class_member_offsets(json_data)
-    result_global_constants = GlobalConstants()
+    result_global_constants = parse_global_constants(json_data)
     result_global_enums = parse_global_enums(json_data)
     result_utility_functions = parse_utility_functions(json_data)
     result_builtin_classes = parse_builtin_classes(json_data)
