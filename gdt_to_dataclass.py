@@ -236,58 +236,99 @@ class BuiltinClass:
 @dataclass
 class BuiltinClasses:
     builtin_classes: list[BuiltinClass] = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L979
+# an enum's properties of the current class
+# contains name and value
 @dataclass
 class ClassesEnumValue:
     name: str
     value: int
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L971
+# an enum of the class
+# contains its name, an array of values
 @dataclass
 class ClassesEnum:
     name: str
     is_bitfield: bool
     values: list[ClassesEnumValue] | None = field(default_factory=list)
-   
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L945
+# a constant of the class
+#    
 @dataclass
 class ClassesConstant:
     name: str
     value: int
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1044
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1142
+# method's return value
+# for virtual methods, L1044, it depends on "has_return"
+# for not virtual, not hidden methods, it's decided by "i"'s value, 
+# but be careful, whether a method has return value is 
+# still decided by "has_return()", so here are no big 
+# difference between virtual and other methods' json
 @dataclass
 class ClassesMethodReturnValue:
     type: str
     meta: str | None
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1058
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1144
+# method's argument
+# similiar to method's return value, both virtual and 
+# other methods' argument has name, type, meta, default_value    
 @dataclass
 class ClassesMethodArgument:
     name: str
     type: str
     meta: str | None
     default_value: str | None
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1018
+# Virtual method's properties
+#     
+@dataclass
+class ClassesMethodVirtual:
+    name: str
+    is_const: bool
+    is_static: bool
+    is_required: bool | None
+    is_vararg: bool
+    is_virtual: bool
+    hash: int
+    hash_compatibility: list[int] | None = field(default_factory=list)
+    return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
+    arguments: list[ClassesMethodArgument] | None = field(default_factory=list)
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1090
+# not virtual, not hidden methods
+# 
 @dataclass
 class ClassesMethod:
     name: str
     is_const: bool
     is_vararg: bool
     is_static: bool
-    is_required: bool | None
     is_virtual: bool
     hash: int
     hash_compatibility: list[int] | None = field(default_factory=list)
     return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
-    arguments: list[ClassesMethodArgument] | None = field(default_factory=list)
+    arguments: list[ClassesMethodArgument] | None = field(default_factory=list)    
 
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1183
+# argument of class's signal property
+# includes name, type, may have meta
 @dataclass
 class ClassesSignalArgument:
     name: str
     type: str
-    
+    meta: str | None
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1204
+# signal of the class
+# contains name and an array of arguments    
 @dataclass
 class ClassesSignal:
     name: str
     arguments: list[ClassesSignalArgument] | None = field(default_factory=list)
-
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1253
+# property of the class
+# 
 @dataclass
 class ClassesProperty:
     type: str
@@ -295,7 +336,9 @@ class ClassesProperty:
     setter: str | None
     getter: str | None
     index: str | None
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L913
+# a single class's property
+#     
 @dataclass
 class ClassesSingle:
     name: str
@@ -305,10 +348,12 @@ class ClassesSingle:
     api_type: str
     constants: list[ClassesConstant] | None = field(default_factory=list)
     enums: list[ClassesEnum] | None = field(default_factory=list)
-    methods: list[ClassesMethod] | None = field(default_factory=list)
+    methods: list[ClassesMethod] | list[ClassesMethodVirtual] | None = field(default_factory=list)
     signals: list[ClassesSignal] | None = field(default_factory=list)
     properties: list[ClassesProperty] | None = field(default_factory=list)
-    
+# https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1266
+# contains all the classes
+# 
 @dataclass
 class Classes:
     classes: list[ClassesSingle] = field(default_factory=list)
@@ -539,16 +584,27 @@ def parse_classes(json_data: dict) -> Classes:
                         for arg in arg_list]
             if not arguments:
                 arguments = None
-            method = ClassesMethod(name=classes_method['name'],
-                                   is_const=classes_method['is_const'],
-                                   is_vararg=classes_method['is_vararg'],
-                                   is_static=classes_method['is_static'],
-                                   is_virtual=classes_method['is_virtual'],
-                                   is_required=classes_method.get('is_required'),
-                                   hash=classes_method['hash'],
-                                   hash_compatibility=classes_method.get('hash_compatibility'),
-                                   arguments=arguments,
-                                   return_value=return_value)
+            if 'is_required' in classes_method:
+                method = ClassesMethodVirtual(name=classes_method['name'],
+                                    is_const=classes_method['is_const'],
+                                    is_vararg=classes_method['is_vararg'],
+                                    is_static=classes_method['is_static'],
+                                    is_virtual=classes_method['is_virtual'],
+                                    is_required=classes_method.get('is_required'),
+                                    hash=classes_method['hash'],
+                                    hash_compatibility=classes_method.get('hash_compatibility'),
+                                    arguments=arguments,
+                                    return_value=return_value)
+            else:
+                method = ClassesMethod(name=classes_method['name'],
+                                    is_const=classes_method['is_const'],
+                                    is_vararg=classes_method['is_vararg'],
+                                    is_static=classes_method['is_static'],
+                                    is_virtual=classes_method['is_virtual'],
+                                    hash=classes_method['hash'],
+                                    hash_compatibility=classes_method.get('hash_compatibility'),
+                                    arguments=arguments,
+                                    return_value=return_value)
             classes_methods.append(method)
         if not classes_methods:
             classes_methods = None
@@ -556,7 +612,8 @@ def parse_classes(json_data: dict) -> Classes:
         for classes_signal in classes_single.get('signals', []):
             arg_list = classes_signal.get('arguments', [])
             arguments = [ClassesSignalArgument(name=arg['name'],
-                                               type=arg['type'])
+                                               type=arg['type'],
+                                               meta=arg.get('meta'))
                          for arg in arg_list]
             if not arguments:
                 arguments = None
@@ -633,5 +690,5 @@ if __name__ == '__main__':
                             native_structures=result_native_structures.native_structures)
     cleared_none = remove_none_values(asdict(all_in_one))
     with open('output.json', 'w', encoding='utf-8', newline='') as fp:
-        json.dump(cleared_none, fp, indent='\t')
+        json.dump(cleared_none, fp, indent='\t', ensure_ascii= False)
         fp.write('\n')
