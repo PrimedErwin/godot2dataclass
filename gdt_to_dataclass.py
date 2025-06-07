@@ -91,6 +91,7 @@ class GlobalConstant:
     name: str
     value: int
     is_bitfield: bool
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L520
 # constants
 # array of global constants
@@ -105,6 +106,7 @@ class GlobalConstants:
 class EnumValues:
     name: str
     value: int
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L528
 # name and other properties of an enum
 # values contains the exact values of the current enum
@@ -112,6 +114,7 @@ class EnumValues:
 class GlobalEnum:
     name: str
     is_bitfield: bool
+    description: str | None
     values: list[EnumValues] = field(default_factory=list)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L553
 # enums
@@ -138,6 +141,7 @@ class UtilityFunction:
     is_vararg: bool
     hash: int
     arguments: list[UtilityArguments] | None = field(default_factory=list)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L615
 # utility_funs
 # contains all the utility functions    
@@ -152,6 +156,7 @@ class BuiltinClassOperator:
     name: str
     right_type: str
     return_type: bool
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L654
 # a member of the class    
 # contains basic info of the member
@@ -159,6 +164,7 @@ class BuiltinClassOperator:
 class BuiltinClassMember:
     name: str
     type: str
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L678
 # a constant of the class
 # contains basic info of the constant    
@@ -167,6 +173,7 @@ class BuiltinClassConstant:
     name: str
     type: str
     value: str
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L713
 # name and value of enum values
 #    
@@ -174,12 +181,14 @@ class BuiltinClassConstant:
 class BuiltinClassEnumValue:
     name: str
     value: int
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L704
 # name and other properties of an enum
 #     
 @dataclass
 class BuiltinClassEnum:
     name: str
+    description: str | None
     values: list[BuiltinClassEnumValue] | None= field(default_factory=list)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L805
 # argument's name, type, (perhaps with a default value) of the method
@@ -201,6 +210,7 @@ class BuiltinClassMethod:
     is_static: bool
     hash: int
     arguments: list[BuiltinClassMehodArgument] | None = field(default_factory=list)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L846
 # argument of the constructor
 #     
@@ -215,6 +225,7 @@ class BuiltinClassConstructorArgument:
 class BuiltinClassConstructor:
     index: int
     arguments: list[BuiltinClassConstructorArgument] | None = field(default_factory=list)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L633
 # a class's basic properties
 #     
@@ -230,6 +241,8 @@ class BuiltinClass:
     methods: list[BuiltinClassMethod] | None = field(default_factory=list)
     constructors: list[BuiltinClassConstructor] = field(default_factory=list)
     has_destructor: bool = field(default=False)
+    brief_description: str | None = field(default=None)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L893
 # builtins
 # contains all the builtin classes    
@@ -243,6 +256,7 @@ class BuiltinClasses:
 class ClassesEnumValue:
     name: str
     value: int
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L971
 # an enum of the class
 # contains its name, an array of values
@@ -251,6 +265,7 @@ class ClassesEnum:
     name: str
     is_bitfield: bool
     values: list[ClassesEnumValue] | None = field(default_factory=list)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L945
 # a constant of the class
 #    
@@ -258,6 +273,7 @@ class ClassesEnum:
 class ClassesConstant:
     name: str
     value: int
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1044
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1142
 # method's return value
@@ -296,6 +312,7 @@ class ClassesMethodVirtual:
     hash_compatibility: list[int] | None = field(default_factory=list)
     return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
     arguments: list[ClassesMethodArgument] | None = field(default_factory=list)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1090
 # not virtual, not hidden methods
 # 
@@ -310,7 +327,7 @@ class ClassesMethod:
     hash_compatibility: list[int] | None = field(default_factory=list)
     return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
     arguments: list[ClassesMethodArgument] | None = field(default_factory=list)    
-
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1183
 # argument of class's signal property
 # includes name, type, may have meta
@@ -326,6 +343,7 @@ class ClassesSignalArgument:
 class ClassesSignal:
     name: str
     arguments: list[ClassesSignalArgument] | None = field(default_factory=list)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1253
 # property of the class
 # 
@@ -336,6 +354,7 @@ class ClassesProperty:
     setter: str | None
     getter: str | None
     index: str | None
+    description: str | None
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L913
 # a single class's property
 #     
@@ -351,6 +370,8 @@ class ClassesSingle:
     methods: list[ClassesMethod] | list[ClassesMethodVirtual] | None = field(default_factory=list)
     signals: list[ClassesSignal] | None = field(default_factory=list)
     properties: list[ClassesProperty] | None = field(default_factory=list)
+    brief_description: str | None = field(default=None)
+    description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1266
 # contains all the classes
 # 
@@ -388,7 +409,7 @@ class GodotInOne:
     header: Header
     builtin_class_sizes: list[TypeBuildConfiguration] = field(default_factory=list)
     builtin_class_member_offsets: list[OffsetBuildConfiguration] = field(default_factory=list)
-    global_constants: list = field(default_factory=list)
+    global_constants: list[GlobalConstant] = field(default_factory=list)
     global_enums: list[GlobalEnum] = field(default_factory=list)
     utility_functions: list[UtilityFunction] = field(default_factory=list)
     builtin_classes: list[BuiltinClass] = field(default_factory=list)
@@ -441,18 +462,21 @@ def parse_global_constants(json_data: dict) -> GlobalConstants:
     for constant in json_data.get('global_constants', []):
         constants.append(GlobalConstant(name=constant['name'],
                                         value=constant['value'],
-                                        is_bitfield=constant['is_bitfield']))
+                                        is_bitfield=constant['is_bitfield'],
+                                        description=constant.get('description')))
     return GlobalConstants(global_constants=constants)
             
 def parse_global_enums(json_data: dict) -> GlobalEnums:
     enums = []
     for enum in json_data.get('global_enums', []):
         values = [EnumValues(name=enum_value['name'],
-                             value=enum_value['value'])
+                             value=enum_value['value'],
+                             description=enum_value.get('description'))
                   for enum_value in enum.get('values')]
         enums.append(GlobalEnum(name=enum['name'],
                                 is_bitfield=enum['is_bitfield'],
-                                values=values))
+                                values=values,
+                                description=enum.get('description')))
     return GlobalEnums(global_enums=enums)
             
 def parse_utility_functions(json_data: dict) -> UtilityFunctions:
@@ -469,7 +493,8 @@ def parse_utility_functions(json_data: dict) -> UtilityFunctions:
                                                  category=func['category'],
                                                  is_vararg=func['is_vararg'],
                                                  hash=func['hash'],
-                                                 arguments=arguments))
+                                                 arguments=arguments,
+                                                 description=func.get('description')))
     return UtilityFunctions(utility_functions=utility_functions)
    
 def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
@@ -477,7 +502,8 @@ def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
     for builtin_class in json_data.get('builtin_classes', []):
         operators = [BuiltinClassOperator(name=operator['name'],
                                    right_type=operator.get('right_type'),
-                                   return_type=operator['return_type'])
+                                   return_type=operator['return_type'],
+                                   description=operator.get('description'))
                   for operator in builtin_class.get('operators')]
         builtin_constructors = []
         for builtin_constructor in builtin_class.get('constructors', []):
@@ -488,30 +514,35 @@ def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
             if not arguments:
                 arguments = None
             constructor = BuiltinClassConstructor(index=builtin_constructor['index'],
-                                                  arguments=arguments)
+                                                  arguments=arguments,
+                                                  description=builtin_constructor.get('description'))
             builtin_constructors.append(constructor)
         member_list = builtin_class.get('members', [])
         members = [BuiltinClassMember(name=memb['name'],
-                                      type=memb['type'])
+                                      type=memb['type'],
+                                      description=memb.get('description'))
                    for memb in member_list]
         if not members:
             members = None
         constant_list = builtin_class.get('constants', [])
         constants = [BuiltinClassConstant(name=const['name'],
                                           type=const['type'],
-                                          value=const['value'])
+                                          value=const['value'],
+                                          description=const.get('description'))
                      for const in constant_list]
         if not constants:
             constants = None
         builtin_enums = []
         for builtin_enum in builtin_class.get('enums', []):
             enum_values = [BuiltinClassEnumValue(name=value['name'],
-                                                value=value['value'])
+                                                value=value['value'],
+                                                description=value.get('description'))
                           for value in builtin_enum.get('values', [])]
             if not enum_values:
                 enum_values = None
             enum = BuiltinClassEnum(name=builtin_enum['name'],
-                                    values=enum_values)
+                                    values=enum_values,
+                                    description=builtin_enum.get('description'))
             builtin_enums.append(enum)
         if not builtin_enums:
             builtin_enums = None
@@ -529,7 +560,8 @@ def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
                                         is_const=builtin_method['is_const'],
                                         is_static=builtin_method['is_static'],
                                         hash=builtin_method['hash'],
-                                        arguments=method_arguments)
+                                        arguments=method_arguments,
+                                        description=builtin_method.get('description'))
             builtin_methods.append(method)
         if not builtin_methods:
             builtin_methods = None
@@ -542,7 +574,9 @@ def parse_builtin_classes(json_data: dict) -> BuiltinClasses:
                                             enums=builtin_enums,
                                             methods=builtin_methods,
                                             constructors=builtin_constructors,
-                                            operators=operators))
+                                            operators=operators,
+                                            description=builtin_class.get('description'),
+                                            brief_description=builtin_class.get('brief_description')))
     return BuiltinClasses(builtin_classes=builtin_classes)
      
 def parse_classes(json_data: dict) -> Classes:
@@ -552,20 +586,23 @@ def parse_classes(json_data: dict) -> Classes:
         for classes_enum in classes_single.get('enums', []):
             value_list = classes_enum.get('values', [])
             values = [ClassesEnumValue(name=value['name'],
-                                       value=value['value'])
+                                       value=value['value'],
+                                       description=value.get('description'))
                       for value in value_list]
             if not values:
                 values = None
             enum = ClassesEnum(name=classes_enum['name'],
                                is_bitfield=classes_enum['is_bitfield'],
-                               values=values)
+                               values=values,
+                               description=classes_enum.get('description'))
             classes_enums.append(enum)
         if not classes_enums:
             classes_enums = None
         classes_constants = []
         constant_list = classes_single.get('constants', [])
         classes_constants = [ClassesConstant(name=constant['name'],
-                                             value=constant['value'])
+                                             value=constant['value'],
+                                             description=constant.get('description'))
                              for constant in constant_list]
         if not classes_constants:
             classes_constants = None
@@ -594,7 +631,8 @@ def parse_classes(json_data: dict) -> Classes:
                                     hash=classes_method['hash'],
                                     hash_compatibility=classes_method.get('hash_compatibility'),
                                     arguments=arguments,
-                                    return_value=return_value)
+                                    return_value=return_value,
+                                    description=classes_method.get('description'))
             else:
                 method = ClassesMethod(name=classes_method['name'],
                                     is_const=classes_method['is_const'],
@@ -604,7 +642,8 @@ def parse_classes(json_data: dict) -> Classes:
                                     hash=classes_method['hash'],
                                     hash_compatibility=classes_method.get('hash_compatibility'),
                                     arguments=arguments,
-                                    return_value=return_value)
+                                    return_value=return_value,
+                                    description=classes_method.get('description'))
             classes_methods.append(method)
         if not classes_methods:
             classes_methods = None
@@ -618,7 +657,8 @@ def parse_classes(json_data: dict) -> Classes:
             if not arguments:
                 arguments = None
             signal = ClassesSignal(name=classes_signal['name'],
-                                   arguments=arguments)
+                                   arguments=arguments,
+                                   description=classes_signal.get('description'))
             classes_signals.append(signal)
         if not classes_signals:
             classes_signals = None
@@ -626,7 +666,8 @@ def parse_classes(json_data: dict) -> Classes:
                                               name=arg['name'],
                                               setter=arg.get('setter'),
                                               getter=arg.get('getter'),
-                                              index=arg.get('index'))
+                                              index=arg.get('index'),
+                                              description=arg.get('description'))
                               for arg in classes_single.get('properties', [])]
         if not classes_properties:
             classes_properties = None
@@ -639,7 +680,9 @@ def parse_classes(json_data: dict) -> Classes:
                                      constants=classes_constants,
                                      methods=classes_methods,
                                      signals=classes_signals,
-                                     properties=classes_properties))
+                                     properties=classes_properties,
+                                     brief_description=classes_single.get('brief_description'),
+                                     description=classes_single.get('description')))
     return Classes(classes=classes)
             
 def parse_singletons(json_data: dict) -> Singletons:
