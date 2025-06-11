@@ -310,7 +310,7 @@ class ClassesMethodVirtual:
     is_virtual: bool
     hash: int
     hash_compatibility: list[int] | None = field(default_factory=list)
-    return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
+    return_value: ClassesMethodReturnValue | None = field(default_factory=dict) # type: ignore
     arguments: list[ClassesMethodArgument] | None = field(default_factory=list)
     description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1090
@@ -325,7 +325,7 @@ class ClassesMethod:
     is_virtual: bool
     hash: int
     hash_compatibility: list[int] | None = field(default_factory=list)
-    return_value: ClassesMethodReturnValue | None = field(default_factory=dict)
+    return_value: ClassesMethodReturnValue | None = field(default_factory=dict) # type: ignore
     arguments: list[ClassesMethodArgument] | None = field(default_factory=list)    
     description: str | None = field(default=None)
 # https://github.com/godotengine/godot/blob/1b37dacc1842779fb0d03a5b09026f59c13744fc/core/extension/extension_api_dump.cpp#L1183
@@ -698,20 +698,17 @@ def parse_native_structures(json_data: dict) -> NativeStructures:
         native_structures.append(NativeStructure(name=native_structure['name'],
                                                 format=native_structure['format']))
     return NativeStructures(native_structures=native_structures)
-   
-   
-if __name__ == '__main__':         
-    file_path = 'extension_api.json'
-    with open(file_path, 'r', encoding='utf-8') as fp:
+
+def load_extension_api(path: str) -> GodotInOne:
+    with open(path, 'r', encoding='utf-8') as fp:
         json_data = json.load(fp)
-        
     result_header = Header(json_data['header'].get('version_major'),
-                        json_data['header'].get('version_minor'),
-                        json_data['header'].get('version_patch'),
-                        json_data['header'].get('version_status'),
-                        json_data['header'].get('version_build'),
-                        json_data['header'].get('version_full_name'),
-                        json_data['header'].get('precision'))
+                    json_data['header'].get('version_minor'),
+                    json_data['header'].get('version_patch'),
+                    json_data['header'].get('version_status'),
+                    json_data['header'].get('version_build'),
+                    json_data['header'].get('version_full_name'),
+                    json_data['header'].get('precision'))
     result_builtin_class_sizes = parse_builtin_class_sizes(json_data)
     result_builtin_class_member_offsets = parse_builtin_class_member_offsets(json_data)
     result_global_constants = parse_global_constants(json_data)
@@ -731,6 +728,11 @@ if __name__ == '__main__':
                             classes=result_classes.classes,
                             singletons=result_singletons.singletons,
                             native_structures=result_native_structures.native_structures)
+    return all_in_one
+   
+if __name__ == '__main__':         
+    file_path = 'extension_api.json'
+    all_in_one = load_extension_api(file_path)
     cleared_none = remove_none_values(asdict(all_in_one))
     with open('output.json', 'w', encoding='utf-8', newline='') as fp:
         json.dump(cleared_none, fp, indent='\t', ensure_ascii= False)
