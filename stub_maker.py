@@ -22,33 +22,15 @@ class Writer:
     def __str__(self) -> str:
         return '\n'.join(self.buffer)
 
-# wrap builtin type names. 
-# Some types are like 'enum::Input.CursorShape', class(No.342), with name 'Input', has an enum 'CursorShape'
-# By the rename rule, 'CursorShape' is renamed as a class 'Input_CursorShape'
 def wrap_builtin_type(t: str, need_quote: bool=True):
-    if t == 'String' or t == 'StringName':
-        return 'str'
     if t in BUILTIN_TYPES:
         return t
     else:
         t = t.replace('enum::', '')
-        t = t.replace('typedarray::', '')
-        t = t.replace('bitfield::', '')
-        t = t.replace('*', 'Ptr')
         t = t.replace('.', '_')
         return f'\'{t}\'' if need_quote else f'{t}'
-
-# wrap builtin classes in godot. int/float/bool should use python's own
-def wrap_builtin_class(t: str):
-    if t in BUILTIN_TYPES:
-        return f'{t}_'
-    else:
-        return f'{t}'
-
-# wrap default values, turning bool/str/int/float from str to python objects
+    
 def wrap_default_value(t: str):
-    if t == 'null':
-        return 'None'
     if t == 'true':
         return f'True'
     if t == 'false':
@@ -65,7 +47,6 @@ def wrap_default_value(t: str):
         except ValueError:        
             return f'\'{t}\''
 
-# wrap arguments, some arguments are 'from', 'class', turn them into 'from_'
 def wrap_keyword(t: str):
     if iskeyword(t):
         return f'{t}_'
@@ -83,7 +64,7 @@ def global_enum_to_pyi(global_enum: GlobalEnum, pyi_w: Writer) -> None:
 
 def single_builtin_class_to_pyi(single_class: BuiltinClass, pyi_w: Writer) -> None:
     assert pyi_w.indent_level == 0
-    pyi_w.write(f'class {wrap_builtin_class(single_class.name)}:')
+    pyi_w.write(f'class {single_class.name}:')
     pyi_w.indent()
     pyi_w.write('pass')
     pyi_w.write('')
@@ -127,7 +108,7 @@ def single_class_to_pyi(single_class: ClassesSingle, pyi_w: Writer) -> None:
     if single_class.signals:
         has_signals = True
         for s in single_class.signals:
-            pyi_w.write(f'{wrap_keyword(s.name)} = Signal()')
+            pyi_w.write(f'{wrap_keyword(s.name)} = signal()')
     # methods, and @staticmethod
     if single_class.methods:
         has_methods = True
@@ -197,11 +178,6 @@ all_builtin_classes = all_in_one.builtin_classes
 all_classes = all_in_one.classes
 
 pyi_w = Writer()
-
-pyi_w.write('class Variant:')
-pyi_w.indent()
-pyi_w.write('pass')
-pyi_w.dedent()
 
 for global_enum in all_global_enums:
     global_enum_to_pyi(global_enum, pyi_w)
